@@ -1,0 +1,6 @@
+Flask
+mysql-connector-python
+torch
+opencv-python
+numpy
+Werkzeug

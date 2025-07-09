@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}Live Detection{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Video Feed Section -->
+        <div class="bg-white rounded-lg shadow-lg p-4">
+            <h2 class="text-2xl font-bold mb-4">Live Detection</h2>
+            <div class="relative aspect-video">
+                <!-- Video element for camera feed -->
+                <video id="videoElement" autoplay playsinline class="w-full h-full object-cover rounded-lg"></video>
+                <!-- Canvas for drawing detection boxes -->
+                <canvas id="detectionCanvas" class="absolute top-0 left-0 w-full h-full"></canvas>
+            </div>
+        </div>
+
+        <!-- Detection Results Section -->
+        <div id="detectionResults" class="bg-white rounded-lg shadow-lg p-4 hidden">
+            <h2 class="text-2xl font-bold mb-4 text-red-600">
+                <i class="fas fa-exclamation-triangle"></i> Criminal Detected!
+            </h2>
+            <div id="criminalDetails"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Alert Sound -->
+<audio id="alertSound" src="{{ url_for('static', filename='alert.mp3') }}"></audio>
+
+<script>
+let isProcessing = false;
+const processingInterval = 500; // Process every 500ms
+
+const video = document.getElementById('videoElement');
+const canvas = document.getElementById('detectionCanvas');
+const ctx = canvas.getContext('2d');
+const detectionResults = document.getElementById('detectionResults');
+const criminalDetails = document.getElementById('criminalDetails');
+const alertSound = document.getElementById('alertSound');
+
+async function processFrame() {
+    if (isProcessing || !video.readyState === video.HAVE_ENOUGH_DATA) {
+        return;
+    }
+    
+    try {
+        isProcessing = true;
+        console.log('Processing new frame...'); // Debug log
+        
+        // Draw current frame
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        // Get frame data
+        const imageData = canvas.toDataURL('image/jpeg', 0.8);
+        
+        // Send to server
+        const response = await fetch('/process_frame', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ frame: imageData })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('Detection results:', data); // Debug log
+        
+        // Clear and redraw video frame
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        // Process results
+        if (data.results && data.results.length > 0) {
+            data.results.forEach(result => {
+                const [top, right, bottom, left] = result.location;
+                
+                if (result.criminal) {
+                    // Criminal detected - draw red box
+                    ctx.strokeStyle = '#FF0000';
+                    ctx.lineWidth = 3;
+                    ctx.strokeRect(left, top, right - left, bottom - top);
+                    
+                    // Show criminal info
+                    detectionResults.classList.remove('hidden');
+                    criminalDetails.innerHTML = `
+                        <div class="border rounded p-4 bg-red-50">
+                            <h3 class="text-xl font-bold text-red-600 mb-2">⚠️ Criminal Detected!</h3>
+                            <div class="space-y-2">
+                                <p><strong>Name:</strong> ${result.criminal.name}</p>
+                                <p><strong>Age:</strong> ${result.criminal.age}</p>
+                                <p><strong>Crime:</strong> ${result.criminal.crime}</p>
+                                <p><strong>Confidence:</strong> ${result.criminal.confidence.toFixed(1)}%</p>
+                                <p class="text-sm text-gray-500">Detected at: ${new Date().toLocaleString()}</p>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Play alert
+                    alertSound.play().catch(e => console.error('Error playing alert:', e));
+                    
+                    // Stop processing
+                    isProcessing = true;
+                    return;
+                    
+                } else {
+                    // Non-criminal - draw green box
+                    ctx.strokeStyle = '#00FF00';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(left, top, right - left, bottom - top);
+                    
+                    // Add scanning text
+                    ctx.fillStyle = '#00FF00';
+                    ctx.font = '16px Arial';
+                    ctx.fillText('Scanning...', left, top - 5);
+                }
+            });
+        }
+        
+    } catch (error) {
+        console.error('Error:', error);
+    } finally {
+        isProcessing = false;
+    }
+}
+
+// Start camera
+async function startCamera() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { 
+                width: 640,
+                height: 480,
+                facingMode: 'user'
+            } 
+        });
+        
+        video.srcObject = stream;
+        
+        video.onloadedmetadata = () => {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            // Start processing frames periodically
+            setInterval(processFrame, processingInterval);
+        };
+        
+    } catch (err) {
+        console.error('Camera error:', err);
+        alert('Could not access camera. Please check permissions.');
+    }
+}
+
+// Add reset button
+const resetButton = document.createElement('button');
+resetButton.className = 'mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600';
+resetButton.textContent = 'Reset Detection';
+resetButton.onclick = () => {
+    isProcessing = false;
+    detectionResults.classList.add('hidden');
+};
+document.querySelector('.container').appendChild(resetButton);
+
+// Start everything
+startCamera();
+
+// Log when page loads
+console.log('Live detection page loaded');
+</script>
+{% endblock %} 

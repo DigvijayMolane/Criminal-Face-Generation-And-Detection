@@ -1,0 +1,10 @@
+<form method="POST">
+    <input type="text" name="name" value="{{ criminal.name }}" required>
+    <input type="number" name="age" value="{{ criminal.age }}" required>
+    <select name="gender">
+        <option value="Male" {% if criminal.gender == "Male" %}selected{% endif %}>Male</option>
+        <option value="Female" {% if criminal.gender == "Female" %}selected{% endif %}>Female</option>
+    </select>
+    <input type="text" name="crime" value="{{ criminal.crime }}" required>
+    <button type="submit">Update</button>
+</form>
