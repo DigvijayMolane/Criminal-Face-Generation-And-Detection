@@ -13,3 +13,13 @@
 
 ![Screenshot](https://github.com/DigvijayMolane/Criminal-Face-Generation-And-Detection/blob/main/Screenshot%202025-05-26%20115013.png?raw=true)
 
+
+## 🚀   Detection system
+
+![Screenshot](https://github.com/DigvijayMolane/Criminal-Face-Generation-And-Detection/blob/main/Screenshot%202025-03-27%20131203.png?raw=true)
+
+
+## 🚀   Detection system
+
+![Screenshot](https://github.com/DigvijayMolane/Criminal-Face-Generation-And-Detection/blob/main/Screenshot%202025-03-27%20124609.png?raw=true)
+
