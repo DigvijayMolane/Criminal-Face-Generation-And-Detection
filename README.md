@@ -1,3 +1,3 @@
 ## 🚀 Project website main page
 
-![Screenshot](C:\Users\DELL\Downloads)
+![Screenshot](Downloads/Screenshot1.png)
