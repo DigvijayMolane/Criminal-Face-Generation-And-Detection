@@ -7,3 +7,9 @@
 
 ![Screenshot](https://github.com/DigvijayMolane/Criminal-Face-Generation-And-Detection/blob/main/Screenshot%202025-05-26%20115003.png?raw=true)
 
+
+
+## 🚀   Criminal Management system
+
+![Screenshot](https://github.com/DigvijayMolane/Criminal-Face-Generation-And-Detection/blob/main/Screenshot%202025-05-26%20115013.png?raw=true)
+
